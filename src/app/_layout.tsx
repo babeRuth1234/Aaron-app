@@ -1,9 +1,26 @@
 import { Stack } from 'expo-router';
+import { AppProvider } from '../context/AppContext';
+// import * as Notifications from 'expo-notifications';
 
-export default function RootLayout() {
+/*
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+*/
+
+export default function Layout() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-    </Stack>
+    <AppProvider>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: '#f8f9fa' }
+        }}
+      />
+    </AppProvider>
   );
 }

@@ -1,261 +1,151 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Image, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState } from 'react';
+import { router } from 'expo-router';
+import { useState, useContext } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import { apiClient } from '../api/client';
+import { AppContext } from '../context/AppContext';
+// import * as Device from 'expo-device';
+// import * as Notifications from 'expo-notifications';
 
-export default function Dashboard() {
-  const [streak, setStreak] = useState(12);
+export default function LoginScreen() {
+  const { setUser, setRoomId, setRole } = useContext(AppContext);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  const handleAuth = async () => {
+    if (!email || !password) return alert('Please enter email and password');
+    if (!isLogin && !name) return alert('Please enter your name');
+
+    setLoading(true);
+    try {
+      // 1. Get Push Token (Disabled for Expo Go compatibility)
+      let pushToken = '';
+      /*
+      if (Device.isDevice) {
+        if (Platform.OS === 'android') {
+          await Notifications.setNotificationChannelAsync('default', {
+            name: 'default',
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: '#FF231F7C',
+          });
+        }
+        
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
+        if (existingStatus !== 'granted') {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+        }
+        if (finalStatus === 'granted') {
+          try {
+            pushToken = (await Notifications.getExpoPushTokenAsync()).data;
+          } catch (e) {
+            console.log('Failed to get push token:', e);
+          }
+        }
+      }
+      */
+
+      // 2. Auth Request
+      const endpoint = isLogin ? '/auth/login' : '/auth/register';
+      const res = await apiClient.post(endpoint, { name, email, password, pushToken });
+      setUser(res.data.user);
+      
+      // Auto-route based on room persistence
+      if (res.data.roomId) {
+        setRoomId(res.data.roomId);
+        setRole(res.data.role);
+      }
+      
+      // Route to avatar picker if they don't have one
+      if (!res.data.user.avatar_url) {
+        router.replace('/avatar-picker');
+      } else {
+        if (res.data.roomId) {
+          router.replace('/dashboard');
+        } else {
+          router.replace('/setup');
+        }
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(err.response?.data?.message || 'Authentication failed. Is backend running?');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header Section */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Good morning, Aaron!</Text>
-            <Text style={styles.roomName}>Room 304 B Block</Text>
-          </View>
-          <View style={styles.streakBadge}>
-            <Ionicons name="flame" size={20} color="#ffb800" />
-            <Text style={styles.streakText}>{streak}</Text>
-          </View>
+      <View style={styles.content}>
+        <View style={styles.logoContainer}>
+          <Image source={require('../../assets/expo.icon/Assets/ChatGPT Image May 26, 2026, 02_50_51 AM.png')} style={{ width: 120, height: 120, borderRadius: 24, marginBottom: 16 }} />
+          {/* <Text style={styles.title}>AAron</Text> */}
+          <Text style={styles.subtitle}>Automated Allocation of Roommates' Obligations Network.</Text>
         </View>
 
-        {/* Progress Ring / Stats Section - Brilliant Style */}
-        <View style={styles.statsCard}>
-          <View style={styles.statsHeader}>
-            <Text style={styles.statsTitle}>Today's Goal</Text>
-            <Text style={styles.statsSubtitle}>2 of 3 chores done</Text>
-          </View>
-          <View style={styles.progressBarContainer}>
-            <View style={styles.progressBarBackground}>
-              <View style={[styles.progressBarFill, { width: '66%' }]} />
-            </View>
-          </View>
-        </View>
+        <View style={styles.formContainer}>
+          {!isLogin && (
+            <>
+              <Text style={styles.label}>Full Name</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Tunde O."
+                value={name}
+                onChangeText={setName}
+                autoCapitalize="words"
+              />
+            </>
+          )}
 
-        {/* Chores List */}
-        <Text style={styles.sectionTitle}>My Chores</Text>
-        
-        <View style={styles.choreCard}>
-          <View style={styles.choreIconBg}>
-            <Ionicons name="trash-outline" size={24} color="#3b82f6" />
-          </View>
-          <View style={styles.choreInfo}>
-            <Text style={styles.choreTitle}>Empty Trash</Text>
-            <Text style={styles.choreTime}>Due by 8 PM</Text>
-          </View>
-          <TouchableOpacity style={styles.completeButton}>
-            <Ionicons name="checkmark-circle-outline" size={24} color="#00a261" />
+          <Text style={styles.label}>Email Address</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="you@example.com"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
+
+          <Text style={styles.label}>Password</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="••••••••"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
+
+          <TouchableOpacity style={styles.button} onPress={handleAuth} disabled={loading}>
+            {loading ? <ActivityIndicator color="#000000" /> : <Text style={styles.buttonText}>{isLogin ? 'Log In' : 'Sign Up'}</Text>}
+          </TouchableOpacity>
+          
+          <TouchableOpacity onPress={() => setIsLogin(!isLogin)} style={{ marginTop: 16, alignItems: 'center' }}>
+            <Text style={{ color: '#000000', fontWeight: '800' }}>
+              {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Log In"}
+            </Text>
           </TouchableOpacity>
         </View>
-
-        <View style={[styles.choreCard, styles.choreCardCompleted]}>
-          <View style={[styles.choreIconBg, { backgroundColor: '#e2f5ec' }]}>
-            <Ionicons name="water-outline" size={24} color="#00a261" />
-          </View>
-          <View style={styles.choreInfo}>
-            <Text style={[styles.choreTitle, styles.choreTitleCompleted]}>Clean Sink</Text>
-            <Text style={styles.choreTimeCompleted}>Completed</Text>
-          </View>
-          <Ionicons name="checkmark-circle" size={28} color="#00a261" />
-        </View>
-
-        {/* Bounty Board */}
-        <Text style={[styles.sectionTitle, { marginTop: 24, color: '#ff6b6b' }]}>🔥 Bounty Board</Text>
-        <Text style={styles.bountyDesc}>Grab these overdue chores for 1.5x points!</Text>
-        
-        <View style={styles.bountyCard}>
-          <View style={[styles.choreIconBg, { backgroundColor: '#ffe3e3' }]}>
-            <Ionicons name="alert-circle-outline" size={24} color="#ff6b6b" />
-          </View>
-          <View style={styles.choreInfo}>
-            <Text style={styles.choreTitle}>Sweep Floor</Text>
-            <Text style={styles.bountyPoints}>+15 pts (was Tunde's)</Text>
-          </View>
-          <TouchableOpacity style={styles.claimButton}>
-            <Text style={styles.claimButtonText}>Claim</Text>
-          </TouchableOpacity>
-        </View>
-
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  scrollContent: {
-    padding: 20,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  greeting: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1a1a1a',
-  },
-  roomName: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 4,
-  },
-  streakBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff0cc',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  streakText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#cc9300',
-    marginLeft: 4,
-  },
-  statsCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  statsHeader: {
-    marginBottom: 16,
-  },
-  statsTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1a1a1a',
-  },
-  statsSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  progressBarContainer: {
-    width: '100%',
-  },
-  progressBarBackground: {
-    height: 12,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 6,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#00a261',
-    borderRadius: 6,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1a1a1a',
-    marginBottom: 16,
-  },
-  choreCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 8,
-    elevation: 1,
-  },
-  choreCardCompleted: {
-    backgroundColor: '#f8f9fa',
-    borderColor: '#e2e8f0',
-    borderWidth: 1,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  choreIconBg: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: '#e0f2fe',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  choreInfo: {
-    flex: 1,
-  },
-  choreTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1a1a1a',
-  },
-  choreTitleCompleted: {
-    color: '#94a3b8',
-    textDecorationLine: 'line-through',
-  },
-  choreTime: {
-    fontSize: 14,
-    color: '#64748b',
-    marginTop: 4,
-  },
-  choreTimeCompleted: {
-    fontSize: 14,
-    color: '#00a261',
-    marginTop: 4,
-    fontWeight: '500',
-  },
-  completeButton: {
-    padding: 8,
-  },
-  bountyDesc: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 16,
-    marginTop: -8,
-  },
-  bountyCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#ffe3e3',
-    shadowColor: '#ff6b6b',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  bountyPoints: {
-    fontSize: 14,
-    color: '#ff6b6b',
-    fontWeight: '600',
-    marginTop: 4,
-  },
-  claimButton: {
-    backgroundColor: '#ff6b6b',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  claimButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 14,
-  },
+  container: { flex: 1, backgroundColor: '#F4F4F4' },
+  content: { flex: 1, padding: 24, justifyContent: 'center' },
+  logoContainer: { alignItems: 'center', marginBottom: 48 },
+  title: { fontSize: 32, fontWeight: '900', color: '#000000', marginTop: 16 },
+  subtitle: { fontSize: 16, color: '#888888', marginTop: 8, textAlign: 'center' },
+  formContainer: { width: '100%' },
+  label: { fontSize: 14, fontWeight: '600', color: '#000000', marginBottom: 8 },
+  input: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#EAEAEA', borderRadius: 20, padding: 16, fontSize: 16, marginBottom: 20, color: '#000000' },
+  button: { backgroundColor: '#CCFF00', paddingVertical: 18, borderRadius: 20, alignItems: 'center', marginTop: 8 },
+  buttonText: { color: '#000000', fontSize: 16, fontWeight: '800' },
 });
