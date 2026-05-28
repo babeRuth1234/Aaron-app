@@ -23,7 +23,7 @@ export default function CreateRoomScreen() {
       setStep(2);
     } catch (err) {
       console.error(err);
-      alert('Failed to create room. Make sure backend is running.');
+      alert('Failed to create room. Check your internet connection and try again.');
     }
   };
 

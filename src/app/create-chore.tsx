@@ -29,7 +29,7 @@ export default function CreateChoreScreen() {
         const membersRes = await apiClient.get(`/rooms/${roomId}/members`);
         setRoommates(membersRes.data.members);
       } catch (err) {
-        console.error("Make sure the backend is running to load roommates!", err);
+        console.error("Ensure you are connected to the internet ", err);
       }
     };
     fetchRoommates();
@@ -73,7 +73,7 @@ export default function CreateChoreScreen() {
       router.back();
     } catch (err) {
       console.error(err);
-      alert('Failed to create chore. Ensure backend is running.');
+      alert('Failed to create chore. Check your internet connection and try again.');
     } finally {
       setIsSubmitting(false);
     }

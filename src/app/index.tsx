@@ -1,20 +1,32 @@
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ActivityIndicator, Image, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../api/client';
 import { AppContext } from '../context/AppContext';
-// import * as Device from 'expo-device';
-// import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
 
 export default function LoginScreen() {
-  const { setUser, setRoomId, setRole } = useContext(AppContext);
+  const { user, setUser, roomId, setRoomId, setRole, isReady } = useContext(AppContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isReady && user) {
+      if (!user.avatar_url) {
+        router.replace('/avatar-picker');
+      } else if (roomId) {
+        router.replace('/dashboard');
+      } else {
+        router.replace('/setup');
+      }
+    }
+  }, [isReady, user, roomId]);
 
   const handleAuth = async () => {
     if (!email || !password) return alert('Please enter email and password');
@@ -22,9 +34,8 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
-      // 1. Get Push Token (Disabled for Expo Go compatibility)
+      // 1. Get Push Token
       let pushToken = '';
-      /*
       if (Device.isDevice) {
         if (Platform.OS === 'android') {
           await Notifications.setNotificationChannelAsync('default', {
@@ -43,13 +54,14 @@ export default function LoginScreen() {
         }
         if (finalStatus === 'granted') {
           try {
-            pushToken = (await Notifications.getExpoPushTokenAsync()).data;
+            pushToken = (await Notifications.getExpoPushTokenAsync({
+              projectId: 'ba542f3b-d39c-410f-83a5-10a1d36b925a',
+            })).data;
           } catch (e) {
             console.log('Failed to get push token:', e);
           }
         }
       }
-      */
 
       // 2. Auth Request
       const endpoint = isLogin ? '/auth/login' : '/auth/register';
@@ -74,17 +86,25 @@ export default function LoginScreen() {
       }
     } catch (err: any) {
       console.error(err);
-      alert(err.response?.data?.message || 'Authentication failed. Is backend running?');
+      alert(err.response?.data?.message || 'Authentication failed. Check your internet connection and try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  if (!isReady) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#000000" />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.logoContainer}>
-          <Image source={require('../../assets/expo.icon/Assets/ChatGPT Image May 26, 2026, 02_50_51 AM.png')} style={{ width: 120, height: 120, borderRadius: 24, marginBottom: 16 }} />
+          {/* <Image source={require('./hostel-chores-frontend/assets/images/app_icon_a_clean.png')} style={{ width: 120, height: 120, borderRadius: 24, marginBottom: 16 }} /> */}
           {/* <Text style={styles.title}>AAron</Text> */}
           <Text style={styles.subtitle}>Automated Allocation of Roommates' Obligations Network.</Text>
         </View>

@@ -91,7 +91,7 @@ export default function EditChoreScreen() {
       router.back();
     } catch (err) {
       console.error(err);
-      alert('Failed to update chore. Ensure backend is running.');
+      alert('Failed to update chore. Check your internet connection and try again.');
     } finally {
       setIsSubmitting(false);
     }

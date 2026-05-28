@@ -229,12 +229,22 @@ export default function Dashboard() {
               onPress={() => setActiveTab('mine')}
             >
               <Text style={[styles.tabText, activeTab === 'mine' && styles.tabTextActive]}>My Chores</Text>
+              <View style={[styles.badge, activeTab === 'mine' && styles.badgeActive]}>
+                <Text style={[styles.badgeText, activeTab === 'mine' && styles.badgeTextActive]}>
+                  {myChores.length}
+                </Text>
+              </View>
             </TouchableOpacity>
             <TouchableOpacity 
               style={[styles.tabButton, activeTab === 'roommates' && styles.tabButtonActive]} 
               onPress={() => setActiveTab('roommates')}
             >
               <Text style={[styles.tabText, activeTab === 'roommates' && styles.tabTextActive]}>Roommates</Text>
+              <View style={[styles.badge, activeTab === 'roommates' && styles.badgeActive]}>
+                <Text style={[styles.badgeText, activeTab === 'roommates' && styles.badgeTextActive]}>
+                  {roommateChores.length}
+                </Text>
+              </View>
             </TouchableOpacity>
           </View>
         </View>
@@ -371,10 +381,14 @@ const styles = StyleSheet.create({
   progressBarFill: { height: '100%', backgroundColor: '#CCFF00', borderRadius: 6 },
   
   tabContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  tabButton: { paddingVertical: 10, paddingHorizontal: 16, marginRight: 8, borderRadius: 20, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#EAEAEA' },
+  tabButton: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 16, marginRight: 8, borderRadius: 20, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#EAEAEA' },
   tabButtonActive: { backgroundColor: '#CCFF00', borderColor: '#CCFF00' },
   tabText: { fontSize: 14, fontWeight: '700', color: '#888888' },
   tabTextActive: { color: '#000000' },
+  badge: { backgroundColor: '#F4F4F4', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 2, marginLeft: 8 },
+  badgeActive: { backgroundColor: '#000000' },
+  badgeText: { fontSize: 12, fontWeight: '800', color: '#888888' },
+  badgeTextActive: { color: '#CCFF00' },
   
   choreCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', padding: 16, borderRadius: 15, marginBottom: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 8, elevation: 1, borderWidth: 1, borderColor: '#EAEAEA' },
   choreCardCompleted: { backgroundColor: '#F4F4F4', borderColor: '#EAEAEA', borderWidth: 1, shadowOpacity: 0, elevation: 0 },
