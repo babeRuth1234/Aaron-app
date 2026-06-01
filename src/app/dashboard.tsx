@@ -8,7 +8,7 @@ import { apiClient } from '../api/client';
 import { AppContext } from '../context/AppContext';
 
 export default function Dashboard() {
-  const { user, setUser, roomId, setRoomId, role, setRole, socket } = useContext(AppContext);
+  const { user, setUser, roomId, setRoomId, role, setRole, setToken, socket } = useContext(AppContext);
   const [streak, setStreak] = useState(12);
   const [chores, setChores] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -131,6 +131,7 @@ export default function Dashboard() {
     setUser(null);
     setRoomId(null);
     setRole(null);
+    if (setToken) setToken(null);
     router.replace('/');
   };
 

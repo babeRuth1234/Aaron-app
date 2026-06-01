@@ -16,8 +16,15 @@ apiClient.interceptors.request.use(
   async (config) => {
     try {
       const token = await AsyncStorage.getItem('token');
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
+      if (token) {
+        config.headers = config.headers || {};
+        // @ts-ignore
+        if (config.headers.set) {
+          // @ts-ignore
+          config.headers.set('Authorization', `Bearer ${token}`);
+        } else {
+          config.headers['Authorization'] = `Bearer ${token}`;
+        }
       }
     } catch (error) {
       console.error('Error reading token from AsyncStorage', error);
