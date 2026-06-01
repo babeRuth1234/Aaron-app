@@ -9,7 +9,7 @@ import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 
 export default function LoginScreen() {
-  const { user, setUser, roomId, setRoomId, setRole, isReady } = useContext(AppContext);
+  const { user, setUser, roomId, setRoomId, setRole, isReady, setToken } = useContext(AppContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -66,7 +66,12 @@ export default function LoginScreen() {
       // 2. Auth Request
       const endpoint = isLogin ? '/auth/login' : '/auth/register';
       const res = await apiClient.post(endpoint, { name, email, password, pushToken });
+      
+      // 3. Save User and Token
       setUser(res.data.user);
+      if (res.data.token) {
+        setToken(res.data.token);
+      }
       
       // Auto-route based on room persistence
       if (res.data.roomId) {

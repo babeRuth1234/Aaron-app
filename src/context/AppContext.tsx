@@ -19,6 +19,8 @@ interface AppContextType {
   setRole: (role: 'admin' | 'member' | null) => void;
   socket: Socket | null;
   isReady: boolean;
+  token: string | null;
+  setToken: (token: string | null) => void;
 }
 
 export const AppContext = createContext<AppContextType>({
@@ -30,6 +32,8 @@ export const AppContext = createContext<AppContextType>({
   setRole: () => {},
   socket: null,
   isReady: false,
+  token: null,
+  setToken: () => {},
 });
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
@@ -38,6 +42,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [role, setRoleState] = useState<'admin' | 'member' | null>(null);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isReady, setIsReady] = useState(false);
+  const [token, setTokenState] = useState<string | null>(null);
 
   useEffect(() => {
     const loadStorage = async () => {
@@ -45,10 +50,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         const storedUser = await AsyncStorage.getItem('user');
         const storedRoomId = await AsyncStorage.getItem('roomId');
         const storedRole = await AsyncStorage.getItem('role');
+        const storedToken = await AsyncStorage.getItem('token');
         
         if (storedUser) setUserState(JSON.parse(storedUser));
         if (storedRoomId) setRoomIdState(storedRoomId);
         if (storedRole) setRoleState(storedRole as 'admin' | 'member');
+        if (storedToken) setTokenState(storedToken);
       } catch (e) {
         console.error("Failed to load auth data", e);
       } finally {
@@ -76,6 +83,12 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     else AsyncStorage.removeItem('role');
   };
 
+  const setToken = (newToken: string | null) => {
+    setTokenState(newToken);
+    if (newToken) AsyncStorage.setItem('token', newToken);
+    else AsyncStorage.removeItem('token');
+  };
+
   // Handle Socket Connection
   useEffect(() => {
     if (user && roomId) {
@@ -99,7 +112,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [user?.id, roomId]);
 
   return (
-    <AppContext.Provider value={{ user, setUser, roomId, setRoomId, role, setRole, socket, isReady }}>
+    <AppContext.Provider value={{ user, setUser, roomId, setRoomId, role, setRole, socket, isReady, token, setToken }}>
       {children}
     </AppContext.Provider>
   );
