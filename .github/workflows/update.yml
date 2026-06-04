@@ -33,4 +33,4 @@ jobs:
         run: echo "$GOOGLE_SERVICES_JSON" > google-services.json
 
       - name: Publish Over-The-Air Update
-        run: eas update --auto
+        run: eas update --channel production --message "Automated update from github actions"
