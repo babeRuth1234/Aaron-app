@@ -36,7 +36,7 @@ export default function LoginScreen() {
     try {
       // 1. Get Push Token
       let pushToken = '';
-      if (Device.isDevice) {
+      if (Platform.OS !== 'web' && Device.isDevice) {
         if (Platform.OS === 'android') {
           await Notifications.setNotificationChannelAsync('default', {
             name: 'default',
@@ -141,7 +141,7 @@ export default function LoginScreen() {
           <Text style={styles.label}>Password</Text>
           <TextInput
             style={styles.input}
-            placeholder="••••••••"
+            placeholder="Password"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
